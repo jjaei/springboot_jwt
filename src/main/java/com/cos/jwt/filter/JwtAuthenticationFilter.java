@@ -1,5 +1,7 @@
 package com.cos.jwt.filter;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.cos.jwt.auth.PrincipalDetails;
 import com.cos.jwt.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +17,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.util.Date;
 
 // 스프링 시큐리티에서 UsernamePasswordAuthenticationFilter
 // /login 요청 시 username, password POST로 전송하면 필터가 동작됨.
@@ -55,6 +58,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         // 5. PrincipalDetails를 세션에 담고(권한 관리를 위해)
         // 6. JWT 토큰을 만들어서 응답한다.
         return null;
+
     }
 
     // attempAuthentication 실행 후 인증이 정상적으로 되면 이 함수가 실행된다.
@@ -62,6 +66,15 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         System.out.println("successfulAuthentication 실행됨, 인증이 완료되었다는 뜻" );
-        super.successfulAuthentication(request, response, chain, authResult);
+        PrincipalDetails principalDetails = (PrincipalDetails) authResult.getPrincipal();
+
+        String jwtToken = JWT.create()
+                .withSubject("token")  // 임시
+                .withExpiresAt(new Date(System.currentTimeMillis() + (60000 * 10)))
+                .withClaim("id", principalDetails.getUser().getId())
+                .withClaim("username", principalDetails.getUser().getUsername())
+                .sign(Algorithm.HMAC512("token"));  // 임시
+        response.addHeader("Authorization", "Bearer " + jwtToken);
+
     }
 }
