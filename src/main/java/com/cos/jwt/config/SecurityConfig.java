@@ -1,6 +1,8 @@
 package com.cos.jwt.config;
 
+import com.cos.jwt.UserRepository.UserRepository;
 import com.cos.jwt.filter.JwtAuthenticationFilter;
+import com.cos.jwt.filter.JwtAuthorizationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,7 @@ import org.springframework.web.filter.CorsFilter;
 public class SecurityConfig {
 
     private final CorsFilter corsFilter;
+    private final UserRepository userRepository;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -51,7 +54,8 @@ public class SecurityConfig {
         public void configure(HttpSecurity http) throws Exception {
             AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
             http
-                    .addFilter(new JwtAuthenticationFilter(authenticationManager));
+                .addFilter(new JwtAuthenticationFilter(authenticationManager))
+                .addFilter(new JwtAuthorizationFilter(authenticationManager, userRepository));
 
         }
     }
